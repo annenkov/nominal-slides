@@ -1,0 +1,148 @@
+\usepackage{amsmath, listings, amsthm, xspace, semantic, stmaryrd, mathrsfs}
+\usepackage{mathtools}
+\usepackage[utf8x]{inputenc}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage[all]{xy}
+\usepackage{amsbsy}
+\usepackage[threshold=1]{csquotes}
+
+\usepackage{listings}
+\usepackage{lstcoq}
+\usepackage{mathpartir}
+
+\usepackage{xcolor}
+% colors for Coq syntax highlighting
+\definecolor{ltblue}{rgb}{0,0.4,0.4}
+\definecolor{dkblue}{rgb}{0.1, 0.2, 0.6}
+\definecolor{dkgreen}{rgb}{0.1, 0.5, 0.1}
+\definecolor{dkviolet}{rgb}{0.3,0,0.5}
+\definecolor{dkred}{rgb}{0.5,0,0}
+\definecolor{redd}{rgb}{0.7, 0.1, 0.1}
+
+%% Lean code colors
+\definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
+\definecolor{tacticcolor}{rgb}{0.1, 0.2, 0.6}    % blue
+\definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
+\definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+
+\def\lstlanguagefiles{lstlean.tex}
+
+\usepackage[english]{babel}
+
+% definitions for the first chapter, notation from the NWPT'16 abstract
+\newcommand\tuple[1]{\langle#1\rangle}
+
+\newcommand\ilSem[2]{{\mathcal {IL}}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\sem[1]{\left\llbracket#1\right\rrbracket}
+\newcommand\tSem[2]{{\mathcal {T}}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\cSem[2]{{\mathcal C}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\gSem[1]{\left\llbracket#1\right\rrbracket}
+\newcommand\tysem[1]{\left\llbracket#1\right\rrbracket}
+\newcommand\compileExp[2] {{\tau_{\textrm{e}}}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\compileContr[2]{{\tau_{\textrm{c}}}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\compileOp[2] {{\tau_{\textrm{op}}}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\eSem[2]{{\mathcal E}\left\llbracket#1\right\rrbracket_{#2}}
+\newcommand\cRed[2]{\stackrel{#2}{\Longrightarrow_{#1}}}
+\newcommand\opsem[1]{\left\llbracket#1\right\rrbracket}
+
+\newcommand\type[1]{\mathsf{#1}}
+\newcommand\obs{\mathbf{obs}}
+\newcommand\acc{\mathbf{acc}}
+\newcommand\advEnv[2]{#1/#2}
+
+\newcommand\cutPayoff[1]{\mathsf{cutPayoff}(#1)}
+\newcommand\zero{\emptyset}
+\newcommand\scale{\times}
+\newcommand\both{\mathop{\&}}
+\newcommand\transl{\uparrow}
+\newcommand\promote{\Uparrow}
+\newcommand\transfer[3]{{#1(#2 \to #3)}}
+\newcommand\letc[3]{\letA\;#1 = #2\;\letB\;#3}
+\newcommand\letA{\mathbf{let}}
+\newcommand\letB{\mathbf{in}}
+\newcommand\ifthen[3]{\mathtt{if} \;#1\;  \mathtt{then} \;#2\;
+\mathtt{else} \; #3}
+\newcommand\ifwithin[4]{
+\mathtt{if} \;#1\; \mathtt{within} \;#2\; \mathtt{then} \;#3\;
+\mathtt{else} \; #4}
+\newcommand\pto{\rightharpoonup}
+
+\newcommand\id[1]{\ensuremath{\mathit{#1}}}
+
+\reservestyle{\command}{\mathtt}
+\command{if[if],model[model],not[not],neg[neg],loopif[loopif],
+  payoff[payoff],add[add],sub[sub],mult[mult],div[div],lt[lt],and[and],true[true],
+  or[or],scale[scale],translate[translate],zero[zero],
+  transfer[transfer],both[both],obs[obs],now[now],let[let],Tnum[Tnum],Tvar[Tvar],
+  checkWithin[checkWithin],rNum[rNum],bNum[bNum],Tplus[Tplus],Texpr[Texpr],TnumZ[TnumZ],cond[cond],tplus[tplus]}
+
+\newcommand{\kt}[1]{\texttt{#1}}
+
+%% \theoremstyle{plain}
+%% \newtheorem{thm}{Theorem}[section]
+%% \newtheorem{conj}{Conjecture}[section]
+%% \newtheorem{lemma}{Lemma}[section]
+
+%% \theoremstyle{definition}
+%% \newtheorem{defn}{Definition}[section]
+%% \newtheorem{remark}{Remark}[section]
+%% \newtheoremstyle{case}{}{}{}{}{}{:}{ }{}
+%% \theoremstyle{case}
+%% \newtheorem{case}{Case}
+%% \makeatletter
+%% \@addtoreset{case}{theorem}
+%% \@addtoreset{case}{lemma}
+%% \makeatother
+%% \newtheorem{example}{Example}[chapter]
+
+%% \renewcommand\qedsymbol{$\blacksquare$}
+
+
+% inlined source code
+\newcommand{\icode}[1]{\lstinline[mathescape]!#1!}
+% inlined source code in theorems
+\newcommand{\icodet}[1]{\textup{\lstinline{#1}}}
+
+%% defs for the chapter 2
+\newcommand{\Atom}{\mathbb{A}}
+\newcommand{\Perm}{\id{Perm}~\Atom}
+\newcommand{\SubPerm}[1]{\id{Perm}_{#1}~\Atom}
+\newcommand{\swap}[2]{(#1 ~ #2)}
+\renewcommand{\action}[2]{#1 \cdot #2}
+\newcommand{\aaction}[3]{#2 \cdot_{#1} #3}
+\newcommand{\supp}[1]{\id{supp}~ #1}
+\newcommand{\asupp}[2]{\id{supp}_{#1}~#2}
+\newcommand{\card}[1]{\id{card}~#1}
+\newcommand{\Nom}{\mathbf{Nom}}
+
+\newcommand{\finmap}{\stackrel{\textrm{fin}}{\rightarrow}}
+\newcommand{\TE}{\id{TE}\,}
+\newcommand{\VE}{\id{VE}\,}
+\newcommand{\ME}{\id{ME}\,}
+\newcommand{\MTE}{\id{MTE}\,}
+\newcommand{\SE}{\id{SE}\,}
+\newcommand{\Env}{{\textrm{Env}}}
+\newcommand{\TEnv}{{\textrm{TEnv}}}
+\newcommand{\VEnv}{{\textrm{VEnv}}}
+\newcommand{\MEnv}{{\textrm{MEnv}}}
+\newcommand{\MTEnv}{{\textrm{MTEnv}}}
+\newcommand{\Mid}{{\textrm{Mid}}}
+\newcommand{\MTid}{{\textrm{MTid}}}
+\newcommand{\Mod}{{\textrm{Mod}}}
+\newcommand{\FunSig}{{\textrm{FunSig}}}
+\newcommand{\TSet}{{\textrm{TSet}}}
+\newcommand{\LSet}{{\textrm{LSet}}}
+\newcommand{\NSet}{{\textrm{NSet}}}
+\newcommand{\Finset}{{\textrm{Fin}}}
+\newcommand{\MTy}{{\textrm{MTy}}}
+\newcommand{\kw}[1]{\mbox{\bfseries{#1}}}
+\newcommand{\sembox}[1]{\hfill \normalfont \mbox{\fbox{\(#1\)}}}
+\newcommand{\titlesembox}[2]{\subsubsection*{#1}\sembox{#2}}
+\newcommand{\Dom}{\textrm{Dom}}
+
+\newcommand{\hblue}[1]{\textcolor{blue}{#1}}
+\newcommand{\hgreen}[1]{\textcolor{sortcolor}{#1}}
+\newcommand{\hviolet}[1]{\textcolor{dkviolet}{#1}}
+\newcommand{\hred}[1]{\textcolor{red}{#1}}

@@ -1,0 +1,381 @@
+\documentclass[10pt]{beamer}
+\setbeamertemplate{navigation symbols}{}
+\usetheme{Copenhagen}
+\usepackage{xcolor}
+\usepackage{pifont}
+\usepackage{listings}
+\usepackage{todonotes}
+
+\input{defs}
+\lstset{language=coq}
+
+\title{Nominal Techniques in Coq}
+
+\author{Danil Annenkov}
+\institute{University of Copenhagen}
+\date{November 16, 2017}
+
+\begin{document}
+\maketitle
+
+\AtBeginSection[]
+{
+   \begin{frame}
+       \frametitle{Outline}
+       \tableofcontents[currentsection]
+   \end{frame}
+}
+
+\begin{frame}
+  \frametitle{Background}
+
+  \only<1> {\begin{exampleblock}{}
+    \large{There are only two hard things in Computer Science: cache
+    invalidation and naming things.}
+
+    \vskip5mm
+  \hspace*\fill{\small --- Phil Karlton}
+  \end{exampleblock}}
+
+  \only<2> {\begin{exampleblock}{}
+    \large{There are only two hard things in Computer Science: cache
+      invalidation and \textbf{naming things}.}
+
+    \vskip5mm
+    \hspace*\fill{\small --- Phil Karlton}
+  \end{exampleblock}
+
+  The other side of naming things is to be independent of names!}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variable binding}
+  \begin{itemize}
+  \item Variable binding is ubiquitous concept in the programming language research.
+  \item One wants definitions to be independent of the choice of names
+    for bound variables.
+  \item Easy to deal with in pen-and-paper formalisation.
+  \item Notoriously hard to deal with in proof assistants.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Variable binding: Examples}
+  \begin{lstlisting}
+Definition plusTwo (a : nat) : nat :=
+    let b := 2 in a + b.
+  \end{lstlisting}
+  \pause
+  We can pick other names for \icode{a} and \icode{b}:
+  \begin{lstlisting}
+Definition plusTwo (c : nat) : nat :=
+    let d := 2 in c + d.
+  \end{lstlisting}
+  \pause
+  But not arbitrary names: \textbf{variable capture}!
+  \begin{lstlisting}
+Definition plusTwo (b : nat) : nat :=
+    let b := 2 in b + b.
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Simply-Typed Lambda Calculus}
+  \begin{itemize}
+  \item From now on we will switch to the Simply-Typed Lambda Calculus (STLC).
+  \item Well-studied, simple binding structure.
+  \item The grammar of (raw) lambda terms:\\
+    $e \in \texttt{Lam}  ::= v ~|~ \lambda x.e ~|~ e_1 e_2$:
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variable Convention}
+  \begin{exampleblock}{Barendregt's Variable Convention}
+     \large{If $M_1,\dots, M_n$ occur in a certain mathematical context
+     (e.g. definition, proof), then in these terms all bound
+     variables are chosen to be different from the free variables.}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variable Convention}
+  \begin{itemize}
+  \item Consider the following typing rule for lambda abstraction:
+    \[ \inferrule{\Gamma, x:\tau_1 \vdash e : \tau_2 \\ x \notin \id{dom}(\Gamma)}
+              {\Gamma \vdash \lambda x.e : \tau_1 -> \tau_2} \]
+  \item In order prove weakening
+    \[\forall \Gamma, \Gamma', e, \tau,~~\Gamma |- e : \tau
+    \land \Gamma' \subseteq \Gamma => \Gamma' |- e : \tau\]
+  in case of lambda abstraction one have to show
+  $x \notin \id{dom}(\Gamma')$, knowing only $x \notin \id{dom}(\Gamma)$.
+\item This is possible using the variable convention.
+\item Not enough to formalise in a proof assistant!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\alpha$-equivalence}
+  \begin{itemize}
+  \item We want to identify lambda-expressions up to renaming
+    of bound variables.
+  \item For example, $\lambda x.x =_\alpha \lambda y.y$.
+  \item We could use substitution. Since $y[x/y] = x$, we say that
+    $\lambda x.x =_\alpha \lambda y.y$.
+  \item But substitution must be capture-avoiding, otherwise we would identify
+    $\lambda x.(x~x)$ and $\lambda y.(y~x)$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\alpha$-conversion with transpositions}
+  \begin{itemize}
+  \item The \emph{transposition} swaps two names:
+    \[ \swap{a}{b}~c =
+    \begin{cases}
+      a, \text{if } b = c\\
+      b, \text{if } a = c\\
+      c, \text{otherwise}
+    \end{cases} \]
+  \item We apply transpositions to \textbf{all} occurrences of
+    variables in the lambda-expression:
+    $\action{\swap{y}{x}}{(\lambda y.y)} = \lambda x.x$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\alpha$-conversion with transpositions}
+  Important differences with substitution-based definitions:
+  \begin{itemize}
+  \item Transpositions cannot lead to variable capture:
+    $\action{\swap{y}{x}}{(\lambda y.y~x)} = \lambda x.x~y$
+  \item We can implement the capture-avoiding substitution behavior
+    using restrictions on variables (we write $x \# y$ for $x \neq y$
+    and say ``$x$ is fresh for ``y''):\\
+    \smallskip
+    pick $z \# x$ and $z \# y$, then
+    $\action{\swap{z}{y}}{(\lambda y.y~x)} = \lambda z.z~y$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Sets}
+  \begin{itemize}
+  \item Transpositions are special case of finitary permutations: bijective functions
+    on atoms, which are not an identity on a finite subset.
+    \pause
+  \item Theory of nominal sets [Gabbay and Pitts 1999, Pitts 2013] is a
+    \begin{quote}
+    mathematical theory of names: scope, binding, freshness.
+    \end{quote}
+    \pause
+    \item Uniform theory based on notions of permutation of variables and finite support.
+    \item Applies to various binding structures.
+    \item Allows to bring formalisations in a proof assistant closer to pen-and-paper proofs.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Sets : Definitions}
+  \begin{itemize}
+  \item Assume countably infinite set $\{a,b,c,\dots \}$ of \emph{atoms} $\Atom$, that is
+    \[ AtomInf : \forall X \in \mathcal{P}_{fin}(\Atom),~\exists a,~a \notin X\]
+  \item The \emph{action} of a permutation $\pi$ on a set $X$ as an operation
+    $\action \pi -:  X -> X$ with the following properties:
+    \begin{itemize}
+    \item for any $x\in X$, $\action{\id{id}} x = x$
+    \item for any $x\in X$, permutations $\pi_1$ and $\pi_2$, $\action{\pi_1}{(\action{\pi_2}{x})} = \action{(\pi_1 \circ \pi_2)}x$
+    \end{itemize}
+  \item Finite support in terms of transpositions:
+    \[ \forall a,b \notin \supp x.~\action{\swap{a}{b}} x = x \]
+  \item A \emph{nominal set} \textbf{X} is a set $X$, equipped with the action
+    $\action \pi -$, s.t. each element in $X$ is finitely supported.
+  \item We say that $a$ is fresh for $x \in X$ if it is not in the support of $x$
+   \[ a \# x = a \notin \supp x\]
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Set of Lambda Expressions}
+  \begin{itemize}
+  \item Action (a permutation is applied to \textbf{all} occurrences of atoms uniformly):
+    \begin{align*}
+    \action \pi v &= \pi v\\
+    \action \pi {(\lambda x.e)} &= \lambda (\pi x). \action \pi e\\
+    \action \pi {(e_1 e_2)} &= (\action \pi {e_1}) (\action \pi {e_2})
+    \end{align*}
+  \item Support is a set of \textbf{all} atoms:
+    \begin{align*}
+    \supp v &= \{v\}\\
+    \supp {(\lambda x.e)} &= \{x\} \cup \supp e\\
+    \supp (e_1 e_2) & = (\supp {e_1}) \cup (\supp {e_2})
+  \end{align*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques: $\alpha$-equivalence}
+  We can define $\alpha$-equivalence just in terms of the freshness relation
+  and transpositions
+  \begin{mathpar}
+    \inferrule{\empty}
+              {a =_\alpha a}
+
+   \and
+
+    \inferrule{t_1 =_\alpha t_1' \\
+               t_2 =_\alpha t_2'}
+              {t_1 t_2 =_\alpha t_1' t_2'}
+   \and
+
+   \inferrule{\action{\swap{a_1}{b}}{t_1} =_\alpha \action{\swap{a_2}{b}}{t_2} \\
+               b \# (a_1,a_2,fv(t_1),fv(t_2))}
+              {\lambda a_1 . t_1 =_\alpha \lambda a_2 . t_2}
+  \end{mathpar}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques: $\alpha$-equivalence}
+  \only<1>{\begin{mathpar}
+      \inferrule{ }
+                {\lambda x.x =_\alpha \lambda y.y}
+  \end{mathpar}}
+  \onslide<2->{We get $z$ from the $AtomInf$ axiom with $\{x,y\}$}
+  \only<2>{\begin{mathpar}
+      \inferrule{z \# (x,y,\{x\},\{y\})}
+                {\lambda x.x =_\alpha \lambda y.y}
+  \end{mathpar}}
+  \only<3>{\begin{mathpar}
+      \inferrule{\action{\swap{x}{z}}{x}=_\alpha \action{\swap{y}{z}}{y} \\ z \# (x,y,\{x\},\{y\})}
+                {\lambda x.x =_\alpha \lambda y.y}
+  \end{mathpar}}
+  \only<4>{\begin{mathpar}
+      \inferrule{\inferrule{ }{z=_\alpha z} \\ z \# (x,y,\{x\},\{y\})}
+                {\lambda x.x =_\alpha \lambda y.y}
+    \end{mathpar}}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques: Summary}
+  \begin{itemize}
+  \item Actions are very ``uniform'': permutations apply to
+    variables in any positions - binding, bound, free.
+    \pause
+  \item Nice structuring principle for developing formalisations.
+    \pause
+  \item A simple characterisation of $\alpha$-equivalence.
+    \pause
+  \item $\alpha$-equivalence can be generalized to various structures
+    involving bound variables.
+    \pause
+  \item The support $t \in Lam/=_\alpha$ is a set of free variables of $t$.
+    \pause
+  \item A stronger induction principle incorporating the idea
+    of bound name independence \lbrack Urban et al. 2007 \rbrack.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques: Proof Assistants}
+  \begin{itemize}
+  \item The most developed library for nominal techniques is the Nominal
+    Isabelle package (Isabelle/HOL proof assistant).
+  \item A considerable part of the theory of nominal sets can be
+    developed in the constructive setting of type theory [Choudhury 2015].
+  \item Aydemir, Bohannon, Weirich. Nominal Reasoning Techniques in Coq. 2007.
+
+    \small{\url{http://www.seas.upenn.edu/~sweirich/papers/nominal-coq/}}
+  \item Nominal techniques in Coq are part of the DeepSpec summer school course:
+
+    \small\url{https://github.com/DeepSpec/dsss17/tree/master/Stlc}
+  \item We apply nominal techniques in the formalisation of a
+    higher-order module system.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques in Coq}
+  \begin{itemize}
+  \item Our implementation with examples in lambda-calculus:
+
+    \url{https://github.com/annenkov/stlcnorm}
+  \item We use type classes to define permutations and nominal sets.
+  \item Type classes provide a convenient way of overloading of main
+    notions for various instances of nominal sets.
+  \item Proofs of properties are well-suited for automation.
+  \item We have developed general definitions: permutations,
+    transpositions, nominal sets, freshness relation and so on.
+  \item We have implement machinery for generating sets of fresh names.
+  \item Our lambda-calculus example contains a definition of $\alpha-equivalence$
+    and proofs of equivariance of the typing relation.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Nominal Techniques in Coq: Technical Details}
+  Two ways of defining a permutation:
+  \begin{itemize}
+    \item
+    \begin{lstlisting}
+  Record Perm :=
+      { perm : Atom -> Atom;
+        is_biject_perm :  (is_inj perm) /\ (is_surj perm);
+        has_fin_supp_perm : has_fin_supp perm}.
+    \end{lstlisting}
+    Cannot construct an inverse permutation!
+  \item
+  \begin{lstlisting}
+  Record Perm :=
+      { perm : Atom -> Atom;
+        perm_inv : Atom -> Atom;
+        l_inv : (perm_inv ∘ perm) = id ;
+        r_inv : (perm ∘ perm_inv) = id ;
+        fin_supp : has_fin_supp perm}.
+  \end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Nominal Techniques in Coq: Technical Details}
+  The definition of $\alpha-equivalence$:
+  \begin{lstlisting}
+Inductive ae_exp : NomExp -> NomExp -> Prop :=
+| ae_var : forall (a : NomAtom),
+    (Var a) =$\alpha$ (Var a)
+| ae_lam : forall (a b c : NomAtom) (e1 e2 : NomExp),
+    c $\#$ (a, b, fv_exp e1, fv_exp e2) ->
+    ((swap a c) @ e1) =$\alpha$ ((swap b c) @ e2) ->
+    (Lam a e1) =$\alpha$ (Lam b e2)
+| ae_app : forall e1 e2 e1' e2',
+    e1 =$\alpha$ e1' ->
+    e2 =$\alpha$ e2' ->
+    (App e1 e2) =$\alpha$ (App e1' e2')
+where "e1 =$\alpha$ e2" := (ae_exp e1 e2).
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques in Coq: More}
+  \begin{itemize}
+  \item We have applied nominal techniques to a module system formalisation.
+  \item We have defined $\alpha-equivalence$ for mutually inductive data structures
+    with sets of variables in binding positions.
+  \item Ideally, we would like to have a ``nominal'' induction principle.
+  \item This requires quotienting with $\alpha-equivalence$.
+  \item Defining quotients in Coq is not easy.
+  \item Implementation of Aydemir et al. axiomatises a nominal
+    induction principle for lambda expressions quotiented with
+    $\alpha$-equivalence and provides the soundness proof.
+  \item Higher inductive types could be an interesting option.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Thank you!}
+  \Large Thank you for your attention!
+\end{frame}
+\end{document}
+
+
+\end{document}
