@@ -5,6 +5,7 @@
 \usepackage{pifont}
 \usepackage{listings}
 \usepackage{todonotes}
+\lstloadlanguages{Haskell,Java}
 
 \input{defs}
 \lstset{language=coq}
@@ -52,41 +53,72 @@
 \begin{frame}
   \frametitle{Variable binding}
   \begin{itemize}
-  \item Variable binding is ubiquitous concept in the programming language research.
+  \item Variable binding is a ubiquitous concept in the programming language research.
   \item One wants definitions to be independent of the choice of names
     for bound variables.
-  \item Easy to deal with in pen-and-paper formalisation.
-  \item Notoriously hard to deal with in proof assistants.
+  \item It is relatively easy to deal with binding in pen-and-paper proofs.
+  \item It is notoriously hard to deal with in proof assistants.
   \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Variable binding: Examples}
-  \begin{lstlisting}
-Definition plusTwo (a : nat) : nat :=
-    let b := 2 in a + b.
-  \end{lstlisting}
+  \begin{table}
+    \begin{tabular}{p{5cm} p{5cm}}
+      \hline
+      \multicolumn{1}{c}{\bfseries Haskell} & \multicolumn{1}{c}{\bfseries Java}\\
+      \hline
+      \begin{lstlisting}[language=Haskell]
+plusTwo a = let b = 2
+            $~$ in  a + b
+      \end{lstlisting}&
+      \begin{lstlisting}[language=Java]
+public int plusTwo (int a) {
+    int b = 2;
+    return a + b; }
+      \end{lstlisting}
+    \end{tabular}
+  \end{table}\vspace{-1.5em}
   \pause
+  \centering
   We can pick other names for \icode{a} and \icode{b}:
-  \begin{lstlisting}
-Definition plusTwo (c : nat) : nat :=
-    let d := 2 in c + d.
-  \end{lstlisting}
+  \begin{table}\vspace{-2.5em}
+  \begin{tabular}{p{5cm} p{5cm}}
+      \begin{lstlisting}[language=Haskell]
+plusTwo c = let d = 2
+            $~$ in c + d
+      \end{lstlisting}&
+      \begin{lstlisting}[language=Java]
+public int plusTwo (int c) {
+    int d = 2;
+    return c + d; }
+      \end{lstlisting}
+  \end{tabular}
+  \end{table}\vspace{-1.5em}
   \pause
   But not arbitrary names: \textbf{variable capture}!
-  \begin{lstlisting}
-Definition plusTwo (b : nat) : nat :=
-    let b := 2 in b + b.
-  \end{lstlisting}
+  \begin{table}\vspace{-2.5em}
+  \begin{tabular}{p{5cm} p{5cm}}
+  \begin{lstlisting}[language=Haskell]
+plusTwo b = let b = 2
+            $~$ in b + b
+      \end{lstlisting}&
+      \begin{lstlisting}[language=Java]
+public int plusTwo (int b) {
+    int b = 2;
+    return b + b; }
+      \end{lstlisting}
+  \end{tabular}
+  \end{table}
 \end{frame}
 
 \begin{frame}
   \frametitle{Simply-Typed Lambda Calculus}
   \begin{itemize}
   \item From now on we will switch to the Simply-Typed Lambda Calculus (STLC).
-  \item Well-studied, simple binding structure.
+  \item STLC is well-studied and has a simple binding structure.
   \item The grammar of (raw) lambda terms:\\
-    $e \in \texttt{Lam}  ::= v ~|~ \lambda x.e ~|~ e_1 e_2$:
+    $e \in \texttt{Lam}  ::= v ~|~ \lambda x.e ~|~ e_1 e_2$
   \end{itemize}
 \end{frame}
 
@@ -107,12 +139,14 @@ Definition plusTwo (b : nat) : nat :=
               {\Gamma \vdash \lambda x.e : \tau_1 -> \tau_2} \]
   \item In order prove weakening
     \[\forall \Gamma, \Gamma', e, \tau,~~\Gamma |- e : \tau
-    \land \Gamma' \subseteq \Gamma => \Gamma' |- e : \tau\]
+    \land \Gamma \subseteq \Gamma' => \Gamma' |- e : \tau\]
   in case of lambda abstraction one have to show
   $x \notin \id{dom}(\Gamma')$, knowing only $x \notin \id{dom}(\Gamma)$.
 \item This is possible using the variable convention.
-\item Not enough to formalise in a proof assistant!
   \end{itemize}
+  \pause
+  \centering
+  \large{\textcolor{red}{\ding{55}}  Not enough to formalise in a proof assistant!}
 \end{frame}
 
 \begin{frame}
@@ -124,14 +158,14 @@ Definition plusTwo (b : nat) : nat :=
   \item We could use substitution. Since $y[x/y] = x$, we say that
     $\lambda x.x =_\alpha \lambda y.y$.
   \item But substitution must be capture-avoiding, otherwise we would identify
-    $\lambda x.(x~x)$ and $\lambda y.(y~x)$.
+    $\lambda y.y~x$ and $\lambda x.x~x$.
   \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{$\alpha$-conversion with transpositions}
   \begin{itemize}
-  \item The \emph{transposition} swaps two names:
+  \item A \emph{transposition} swaps two names:
     \[ \swap{a}{b}~c =
     \begin{cases}
       a, \text{if } b = c\\
@@ -155,17 +189,17 @@ Definition plusTwo (b : nat) : nat :=
     and say ``$x$ is fresh for ``y''):\\
     \smallskip
     pick $z \# x$ and $z \# y$, then
-    $\action{\swap{z}{y}}{(\lambda y.y~x)} = \lambda z.z~y$
+    $\action{\swap{z}{y}}{(\lambda y.y~x)} = \lambda z.z~x$
   \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{Nominal Sets}
   \begin{itemize}
-  \item Transpositions are special case of finitary permutations: bijective functions
-    on atoms, which are not an identity on a finite subset.
+  \item A transposition is special case of a \emph{finitary} permutation: a bijective function
+    on atoms, which is not the identity on a finite subset of atoms.
     \pause
-  \item Theory of nominal sets [Gabbay and Pitts 1999, Pitts 2013] is a
+  \item The theory of nominal sets [Gabbay and Pitts 1999, Pitts 2013] is a
     \begin{quote}
     mathematical theory of names: scope, binding, freshness.
     \end{quote}
@@ -179,9 +213,9 @@ Definition plusTwo (b : nat) : nat :=
 \begin{frame}
   \frametitle{Nominal Sets : Definitions}
   \begin{itemize}
-  \item Assume countably infinite set $\{a,b,c,\dots \}$ of \emph{atoms} $\Atom$, that is
+  \item Assume a countably infinite set $\{a,b,c,\dots \}$ of \emph{atoms} $\Atom$:
     \[ AtomInf : \forall X \in \mathcal{P}_{fin}(\Atom),~\exists a,~a \notin X\]
-  \item The \emph{action} of a permutation $\pi$ on a set $X$ as an operation
+  \item The \emph{action} of a permutation $\pi$ on a set $X$ is an operation
     $\action \pi -:  X -> X$ with the following properties:
     \begin{itemize}
     \item for any $x\in X$, $\action{\id{id}} x = x$
@@ -191,8 +225,6 @@ Definition plusTwo (b : nat) : nat :=
     \[ \forall a,b \notin \supp x.~\action{\swap{a}{b}} x = x \]
   \item A \emph{nominal set} \textbf{X} is a set $X$, equipped with the action
     $\action \pi -$, s.t. each element in $X$ is finitely supported.
-  \item We say that $a$ is fresh for $x \in X$ if it is not in the support of $x$
-   \[ a \# x = a \notin \supp x\]
   \end{itemize}
 \end{frame}
 
@@ -217,7 +249,8 @@ Definition plusTwo (b : nat) : nat :=
 \begin{frame}
   \frametitle{Nominal Techniques: $\alpha$-equivalence}
   We can define $\alpha$-equivalence just in terms of the freshness relation
-  and transpositions
+  and transpositions:
+  \vspace{-2em}
   \begin{mathpar}
     \inferrule{\empty}
               {a =_\alpha a}
@@ -233,6 +266,12 @@ Definition plusTwo (b : nat) : nat :=
                b \# (a_1,a_2,fv(t_1),fv(t_2))}
               {\lambda a_1 . t_1 =_\alpha \lambda a_2 . t_2}
   \end{mathpar}
+  The freshness relation ($a$ is fresh for $x$)
+  \[ a \# x = a \notin \supp x\]
+  We write $a \# (x_1,\dots,x_n)$ for $a \# x_1 \land \dots \land a \# x_n$.
+
+  \bigskip
+  The support $t \in Lam/=_\alpha$ is a set of free variables of $t$.
 \end{frame}
 
 \begin{frame}
@@ -256,64 +295,8 @@ Definition plusTwo (b : nat) : nat :=
     \end{mathpar}}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Nominal Techniques: Summary}
-  \begin{itemize}
-  \item Actions are very ``uniform'': permutations apply to
-    variables in any positions - binding, bound, free.
-    \pause
-  \item Nice structuring principle for developing formalisations.
-    \pause
-  \item A simple characterisation of $\alpha$-equivalence.
-    \pause
-  \item $\alpha$-equivalence can be generalized to various structures
-    involving bound variables.
-    \pause
-  \item The support $t \in Lam/=_\alpha$ is a set of free variables of $t$.
-    \pause
-  \item A stronger induction principle incorporating the idea
-    of bound name independence \lbrack Urban et al. 2007 \rbrack.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Nominal Techniques: Proof Assistants}
-  \begin{itemize}
-  \item The most developed library for nominal techniques is the Nominal
-    Isabelle package (Isabelle/HOL proof assistant).
-  \item A considerable part of the theory of nominal sets can be
-    developed in the constructive setting of type theory [Choudhury 2015].
-  \item Aydemir, Bohannon, Weirich. Nominal Reasoning Techniques in Coq. 2007.
-
-    \small{\url{http://www.seas.upenn.edu/~sweirich/papers/nominal-coq/}}
-  \item Nominal techniques in Coq are part of the DeepSpec summer school course:
-
-    \small\url{https://github.com/DeepSpec/dsss17/tree/master/Stlc}
-  \item We apply nominal techniques in the formalisation of a
-    higher-order module system.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Nominal Techniques in Coq}
-  \begin{itemize}
-  \item Our implementation with examples in lambda-calculus:
-
-    \url{https://github.com/annenkov/stlcnorm}
-  \item We use type classes to define permutations and nominal sets.
-  \item Type classes provide a convenient way of overloading of main
-    notions for various instances of nominal sets.
-  \item Proofs of properties are well-suited for automation.
-  \item We have developed general definitions: permutations,
-    transpositions, nominal sets, freshness relation and so on.
-  \item We have implement machinery for generating sets of fresh names.
-  \item Our lambda-calculus example contains a definition of $\alpha-equivalence$
-    and proofs of equivariance of the typing relation.
-  \end{itemize}
-\end{frame}
-
 \begin{frame}[fragile]
-  \frametitle{Nominal Techniques in Coq: Technical Details}
+  \frametitle{Nominal Techniques in Coq: Permutations}
   Two ways of defining a permutation:
   \begin{itemize}
     \item
@@ -323,7 +306,9 @@ Definition plusTwo (b : nat) : nat :=
         is_biject_perm :  (is_inj perm) /\ (is_surj perm);
         has_fin_supp_perm : has_fin_supp perm}.
     \end{lstlisting}
-    Cannot construct an inverse permutation!
+    \pause
+    We cannot use \icode{is_biject_perm} to construct an inverse permutation!
+    \pause
   \item
   \begin{lstlisting}
   Record Perm :=
@@ -337,8 +322,43 @@ Definition plusTwo (b : nat) : nat :=
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Nominal Techniques in Coq: Technical Details}
-  The definition of $\alpha-equivalence$:
+  \frametitle{Nominal Techniques in Coq: Nominal Sets}
+  We use type classes to define nominal sets:
+    \begin{lstlisting}
+Class NomSet :=
+  { Carrier : Type;
+    action : Perm -> Carrier -> Carrier;
+    supp : Carrier -> FinSetA;
+    action_id : forall (x : Carrier), action id_perm x = x;
+    action_compose : forall (x : Carrier) (p p' : Perm),
+        action p (action p' x) = action (p ∘p p') x;
+    support_spec : forall  (p : Perm)  (x : Carrier),
+        (forall (a : Atom), V.In a (supp x) -> p a = a) ->
+        action p x = x}.
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Nominal Techniques in Coq: Lambda Expressions}
+  The nominal set of lambda expressions is an instance of \icode{NomSet}
+    \begin{lstlisting}
+Instance NomExp : NomSet :=
+        {| Carrier := Exp;
+           action := fun p e => ac_exp p e;
+           supp := fun e => supp_exp e;
+           action_id := fun e => (* omitted *);
+           action_compose := fun e p1 p2 => (* omitted *);
+           support_spec := (* omitted *) |}.
+    \end{lstlisting}
+
+\icode{ac_exp p e} recursively applies \icode{p} to all atoms in \icode{e}.
+
+\icode{supp_exp e} returns a set of all atoms in \icode{e}.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Nominal Techniques in Coq: $\alpha$-equivalence}
+  The definition of $\alpha$-equivalence:
   \begin{lstlisting}
 Inductive ae_exp : NomExp -> NomExp -> Prop :=
 | ae_var : forall (a : NomAtom),
@@ -347,27 +367,60 @@ Inductive ae_exp : NomExp -> NomExp -> Prop :=
     c $\#$ (a, b, fv_exp e1, fv_exp e2) ->
     ((swap a c) @ e1) =$\alpha$ ((swap b c) @ e2) ->
     (Lam a e1) =$\alpha$ (Lam b e2)
-| ae_app : forall e1 e2 e1' e2',
+| ae_app : forall (e1 e2 e1' e2' : NomExp),
     e1 =$\alpha$ e1' ->
     e2 =$\alpha$ e2' ->
     (App e1 e2) =$\alpha$ (App e1' e2')
 where "e1 =$\alpha$ e2" := (ae_exp e1 e2).
   \end{lstlisting}
+
+  We use the notation \icode{(swap a b) @ e} for $\action{\swap{a}{b}}{e}$.
 \end{frame}
 
 \begin{frame}
-  \frametitle{Nominal Techniques in Coq: More}
+  \frametitle{Nominal Techniques: Summary}
   \begin{itemize}
-  \item We have applied nominal techniques to a module system formalisation.
-  \item We have defined $\alpha-equivalence$ for mutually inductive data structures
-    with sets of variables in binding positions.
+  \item Actions are ``uniform'': permutations apply to
+    variables in any positions - binding, bound, free.
+    \pause
+  \item Permutations cannot lead to variable capture.
+    \pause
+  \item There is a simple characterisation of $\alpha$-equivalence in
+    terms of transpositions and freshness.
+    \pause
+  \item $\alpha$-equivalence can be generalized to various structures
+    involving bound variables.
+    \pause
+  \item Our development is available on GitHub:
+    \url{https://github.com/annenkov/stlcnorm}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques in Coq: Future Work}
+  \begin{itemize}
   \item Ideally, we would like to have a ``nominal'' induction principle.
-  \item This requires quotienting with $\alpha-equivalence$.
+  \item This requires quotienting with $\alpha$-equivalence.
   \item Defining quotients in Coq is not easy.
   \item Implementation of Aydemir et al. axiomatises a nominal
     induction principle for lambda expressions quotiented with
     $\alpha$-equivalence and provides the soundness proof.
   \item Higher inductive types could be an interesting option.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nominal Techniques: Related Work}
+  \begin{itemize}
+  \item The most developed library for nominal techniques is the Nominal
+    Isabelle package (Isabelle/HOL proof assistant) [Urban and Tasson 2005].
+  \item The theory of nominal sets in Agda [Choudhury 2015].
+  \item Aydemir, Bohannon, Weirich. Nominal Reasoning Techniques in Coq. 2007.
+
+    \small{\url{http://www.seas.upenn.edu/~sweirich/papers/nominal-coq/}}
+  \item Nominal techniques in Coq are part of the DeepSpec summer school course:
+
+    \small\url{https://github.com/DeepSpec/dsss17/tree/master/Stlc}
   \end{itemize}
 \end{frame}
 
