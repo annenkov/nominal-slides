@@ -13,7 +13,7 @@
 \title{Nominal Techniques in Coq}
 
 \author{Danil Annenkov}
-\institute{University of Copenhagen}
+\institute{University of Copenhagen, DIKU \\ HIPERFIT Workshop}
 \date{November 16, 2017}
 
 \begin{document}
@@ -28,8 +28,9 @@
 }
 
 \begin{frame}
-  \frametitle{Background}
-
+  \frametitle{Names}
+  \bigskip
+  \begin{overlayarea}{\textwidth}{8cm}
   \only<1> {\begin{exampleblock}{}
     \large{There are only two hard things in Computer Science: cache
     invalidation and naming things.}
@@ -46,8 +47,8 @@
     \hspace*\fill{\small --- Phil Karlton}
   \end{exampleblock}
 
-  The other side of naming things is to be independent of names!}
-
+  \large{The other side of naming things is to be independent of names!}}
+  \end{overlayarea}
 \end{frame}
 
 \begin{frame}
@@ -154,9 +155,12 @@ public int plusTwo (int b) {
   \begin{itemize}
   \item We want to identify lambda-expressions up to renaming
     of bound variables.
+    \pause
   \item For example, $\lambda x.x =_\alpha \lambda y.y$.
+    \pause
   \item We could use substitution. Since $y[x/y] = x$, we say that
     $\lambda x.x =_\alpha \lambda y.y$.
+    \pause
   \item But substitution must be capture-avoiding, otherwise we would identify
     $\lambda y.y~x$ and $\lambda x.x~x$.
   \end{itemize}
@@ -204,27 +208,29 @@ public int plusTwo (int b) {
     mathematical theory of names: scope, binding, freshness.
     \end{quote}
     \pause
-    \item Uniform theory based on notions of permutation of variables and finite support.
-    \item Applies to various binding structures.
-    \item Allows to bring formalisations in a proof assistant closer to pen-and-paper proofs.
-    \end{itemize}
+  \item Uniform theory based on notions of permutation of variables and finite support.
+     \pause
+  \item Applies to various binding structures.
+      \pause
+  \item Allows to bring formalisations in a proof assistant closer to pen-and-paper proofs.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Nominal Sets : Definitions}
+  \frametitle{Nominal Sets: Definitions}
   \begin{itemize}
   \item Assume a countably infinite set $\{a,b,c,\dots \}$ of \emph{atoms} $\Atom$:
     \[ AtomInf : \forall X \in \mathcal{P}_{fin}(\Atom),~\exists a,~a \notin X\]
-  \item The \emph{action} of a permutation $\pi$ on a set $X$ is an operation
-    $\action \pi -:  X -> X$ with the following properties:
+  \item An \emph{action} of a permutation on a set $X$ is an operation
+    $\action - -: \Perm \times X -> X$ with the following properties:
     \begin{itemize}
     \item for any $x\in X$, $\action{\id{id}} x = x$
     \item for any $x\in X$, permutations $\pi_1$ and $\pi_2$, $\action{\pi_1}{(\action{\pi_2}{x})} = \action{(\pi_1 \circ \pi_2)}x$
     \end{itemize}
-  \item Finite support in terms of transpositions:
+  \item \emph{Finite support} in terms of transpositions:
     \[ \forall a,b \notin \supp x.~\action{\swap{a}{b}} x = x \]
-  \item A \emph{nominal set} \textbf{X} is a set $X$, equipped with the action
-    $\action \pi -$, s.t. each element in $X$ is finitely supported.
+  \item A \emph{nominal set} \textbf{X} is a set $X$, equipped with an action
+    $\action - -$, s.t. each element in $X$ is finitely supported.
   \end{itemize}
 \end{frame}
 
